@@ -1,0 +1,4 @@
+* ToDos
+- check scrapy
+- set up GitHub repo
+- set up remote access

@@ -1,0 +1,25 @@
+$ cat .gitignore
+
+*~
+*#
+#*
+.#*
+notes.org
+/data/
+/analyses/prelim/cache/
+*.csv
+*.dta
+*.RData
+*.Rhistory
+*.log
+*.out
+*.aux
+*.bbl
+*.blg
+*.tar.gz
+*.fdb_latexmk
+*.synctex.gz
+*.nav
+*.snm
+*.toc
+*.el
