@@ -5,19 +5,26 @@ library(stringr)
 library(magrittr)
 library(xlsx)
 
-### reading in the xlsx file -> not run everytime since it takes too long
-# src_shared <- read.xlsx("NYTimes Shared Digital Front Page 0218-0428.xlsm", sheetName = "Shared")
-# src_front <- read.xlsx("NYTimes Shared Digital Front Page 0218-0428.xlsm", sheetName = "FrontPage")
-# src_digital <- read.xlsx("NYTimes Shared Digital Front Page 0218-0428.xlsm", sheetName = "DigitalEdition")
-# save.image("src_nytimes.Rdata")
-load("src_nytimes.Rdata")
+### reading in the xlsx file -> not run every time since it takes too long
+readxlsx <- TRUE
+if(readxlsx == T){
+    src_shared <- read.xlsx("NYTimes Shared Digital Front Page 0218-0428_check.xlsx"
+                          , sheetName = "Shared")
+    src_front <- read.xlsx("NYTimes Shared Digital Front Page 0218-0428_check.xlsx"
+                         , sheetName = "FrontPage")
+    src_digital <- read.xlsx("NYTimes Shared Digital Front Page 0218-0428_check.xlsx"
+                           , sheetName = "DigitalEdition")
+     save.image("src_nytimes.Rdata")
+} else load("src_nytimes.Rdata")
 
 # function to parse the article from nyt, maybe I could switch from a loop to apply/plyr
-get_text <- function(urlvec){
+get_text <- function(urlvec, printurl = FALSE){
     urlvec <- as.character(urlvec)
     out <- NULL
-    pb <- txtProgressBar(min = 0, max = length(urlvec), style = 3)
+    if(printurl == F) pb <- txtProgressBar(min = 0, max = length(urlvec), style = 3)
     for(i in 1:length(urlvec)){
+        # print url in each iteration instead of progress bar
+        if(printurl == T) print(paste0(i,": ", urlvec[i]))
         if(!is.na(urlvec[i])){
             # parse html page
             page <- html(urlvec[i])
@@ -44,9 +51,9 @@ get_text <- function(urlvec){
             # combine outout
             out <- rbind(out, c(urlvec[i], title, keywords, news_keywords, text))
         } else out <- rbind(out, c(urlvec[i], NA, NA, NA, NA))
-        setTxtProgressBar(pb, i)
+        if(printurl == F) setTxtProgressBar(pb, i)
     }
-    close(pb)
+    if(printurl == F) close(pb)
     out <- data.frame(out, stringsAsFactors = FALSE)
     colnames(out) <- c("link", "title", "keywords", "news_keywords", "text")
     return(out)
@@ -84,7 +91,4 @@ rm(nyt_front)
 nyt_digital <- get_text(src_digital$url)
 save(nyt_digital, file="nyt_digital.Rdata")
 rm(nyt_digital)
-
-
-
 
