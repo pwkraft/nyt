@@ -9,7 +9,6 @@ notes.org
 /analyses/prelim/cache/
 *.csv
 *.dta
-*.RData
 *.Rhistory
 *.log
 *.out

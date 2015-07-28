@@ -6,7 +6,7 @@ library(magrittr)
 library(xlsx)
 
 ### reading in the xlsx file -> not run every time since it takes too long
-readxlsx <- TRUE
+readxlsx <- F
 if(readxlsx == T){
     src_shared <- read.xlsx("NYTimes Shared Digital Front Page 0218-0428_check.xlsx"
                           , sheetName = "Shared")
@@ -87,8 +87,13 @@ nyt_front <- get_text(src_front$url)
 save(nyt_front, file="nyt_front.Rdata")
 rm(nyt_front)
 
-# digital
-nyt_digital <- get_text(src_digital$url)
+# digital (split up due to frequent connection problems)
+nyt_digital1 <- get_text(src_digital$url[1:5000])
+nyt_digital2 <- get_text(src_digital$url[5001:10000])
+nyt_digital3 <- get_text(src_digital$url[10001:length(src_digital$url)])
+nyt_digital <- rbind(nyt_digital1,nyt_digital2,nyt_digital3)
 save(nyt_digital, file="nyt_digital.Rdata")
 rm(nyt_digital)
+
+
 
