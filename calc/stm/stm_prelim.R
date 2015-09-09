@@ -2,6 +2,7 @@
 # Preliminary analyses of nytimes articles (stm)
 #################################################
 
+
 rm(list=ls())
 setwd("/data/Uni/projects/2015/nyt/calc/scraping")
 load("../in/nyt_combined.Rdata")
@@ -46,7 +47,28 @@ save.image("../in/test.Rdata")
 # explore words associated with each topic
 labelTopics(test)
 plot.STM(test, type = "summary", xlim = c(0, .3))
+par(mfrow = c(4,5))
 cloud(test, topic = 1, scale = c(2,.25))
+cloud(test, topic = 2, scale = c(2,.25))
+cloud(test, topic = 3, scale = c(2,.25))
+cloud(test, topic = 4, scale = c(2,.25))
+cloud(test, topic = 5, scale = c(2,.25))
+cloud(test, topic = 6, scale = c(2,.25))
+cloud(test, topic = 7, scale = c(2,.25))
+cloud(test, topic = 8, scale = c(2,.25))
+cloud(test, topic = 9, scale = c(2,.25))
+cloud(test, topic = 10, scale = c(2,.25))
+cloud(test, topic = 11, scale = c(2,.25))
+cloud(test, topic = 12, scale = c(2,.25))
+cloud(test, topic = 13, scale = c(2,.25))
+cloud(test, topic = 14, scale = c(2,.25))
+cloud(test, topic = 15, scale = c(2,.25))
+cloud(test, topic = 16, scale = c(2,.25))
+cloud(test, topic = 17, scale = c(2,.25))
+cloud(test, topic = 18, scale = c(2,.25))
+cloud(test, topic = 19, scale = c(2,.25))
+cloud(test, topic = 20, scale = c(2,.25))
+par(mfrow = c(1,1))
 
 # topic correlations
 plot.topicCorr(topicCorr(test))
@@ -67,6 +89,7 @@ plot.estimateEffect(prep, covariate = "viewed", topics = 1:20, model = test, xli
                   , method = "difference", cov.value1 = 1, cov.value2 = 0, main = "viewed")
 plot.estimateEffect(prep, covariate = "digital", topics = 1:20, model = test, xlim = c(-0.1,0.1)
                   , method = "difference", cov.value1 = 1, cov.value2 = 0, main = "digital")
+
 
 
 
