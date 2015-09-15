@@ -1,0 +1,161 @@
+\documentclass[12pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{natbib}
+\usepackage{graphicx}
+\usepackage{verbatim}
+\usepackage{fancyhdr}
+\usepackage{amsmath}
+\usepackage{lscape}
+\usepackage[colorlinks=true,citecolor=black,urlcolor=blue]{hyperref}
+\setlength{\headheight}{15pt}
+
+\title{Preliminary Analyses of New York Times Articles\\\large{Version 1}}
+\author{Patrick Kraft}
+
+\begin{document}
+
+\maketitle
+
+<<echo=FALSE,results='hide',message=FALSE>>=
+rm(list=ls())
+library(stm)
+load("../in/test.Rdata")
+@ 
+
+\section{Description of Dataset}
+
+In order to analyze the content of the NYT articles using the structural topic model approach presented by \citet{roberts2014structural}, I transformed the scraped articles to a reduced dataset where each unique article is included as a \textit{single} observation. Articles that appeared several times in the original raw collection (e.g. most tweeted article for several days) or through different channels (e.g. most tweeted and most viewed) were combined in a single observation. Overall, the reduced dataset contains \Sexpr{nrow(nyt_reduced)} \textit{unique} articles for subsequent analyses.
+
+For each observation, I created a vector of dichotomous variables indicating whether the respective article was included in each of the categories (emailed, facebook, etc.) at least once. Here is a sample of observations from this reduced dataset (article body and keywords are omitted).
+
+<<echo=FALSE>>=
+head(nyt_reduced[nchar(nyt_reduced$title)<20,-(3:6)])
+@ 
+
+The dataset contains a unique id for each article which can be used in subsequent analyses to link the observations back to the full (raw) dataset including multiple instances for each article. The variables \texttt{emailed} through \texttt{digital} represent the matrix of covariates that will be used in order to model differences in topical prevalence in the collection of documents.
+
+
+\section{Initial Results for 20 Topics}
+
+In order to provide a first validation of the method, I estimated a structural topic model with 20 topics using the \texttt{stm} package in \texttt{R} \citep{roberts2014structural,roberts2014stm}. Depending on the specific research question, the number of topics can be increased in subsequent iterations in order to capture more fine-grained differences in article contents. The following output presents an overview of the extracted topics by displaying words that are highly associated with the respective topic (using highest probability, FREX, Lift, Score, see \citealt{roberts2014stm}). It should be noted that I used the spectral initialization implemented in the \texttt{stm} package in order to specify starting values for the subsequent model estimation. \citet[12-13]{roberts2014stm} discuss different alternatives to specify starting values and argue that in practice, the spectral initialization can be utilized successfully with vocabularies smaller than 10,000 entries. However, the vocabulary for the analyses of NYT articles has a size of \Sexpr{length(out$vocab)}, so it might make sense to look at alternative strategies to specify starting values as well. However, I'll leave this issue for future iterations of the analyses.
+
+<<echo=FALSE>>=
+labelTopics(test)
+topics <- c("Presidential race","Sports","Books","Health","Art","Iran/Israel","Banking/Financial","New York/Food","Real Estate","Technology","Fashion","Terrorism/Iraq","Education","Media","Police","Plane Crash","Gender","Film/Shows","Legal/Court","Business")
+@ 
+
+Overall, the extracted topics have high face validity in the context of newspaper articles. Some of them clearly focus on political issues, such as the US presidential race, whereas others represent other themes common in newspapers, such as art, media, sports, or health issues. Based on the high probability words that are strongly associated with each topic, we can assign descriptive labels for each of the extracted topics. I decided to label the topics in the following way: 
+\begin{enumerate}
+\item Presidential race
+\item Sports
+\item Books
+\item Health
+\item Art
+\item Iran/Israel
+\item Banking/Financial
+\item New York/Food
+\item Real Estate
+\item Technology
+\item Fashion
+\item Terrorism/Iraq
+\item Education
+\item Media
+\item Police
+\item Plane Crash
+\item Gender
+\item Film/Shows
+\item Legal/Court
+\item Business
+\end{enumerate}
+
+We can also investigate how frequently each topic was mentioned in the articles. The following plot displays the proportions of each individual topic in the overall text body.
+
+<<echo=FALSE>>=
+plot.STM(test, type = "summary", xlim = c(0, .3), custom.labels = topics)
+@ 
+
+Interestingly, ``Books'' appears to be the most prevalent topic in the set of articles analyzed here. However, it should be kept in mind, that each observation in the document matrix can represent multiple instances of an article in the raw collection. The proportions presented here only describe the proportions in unique articles but does not take into account how often each of the articles was included originally (e.g. as most tweeted, or most viewed multiple times). 
+
+We can also investigate the correlations between topics. Due to the fact that the structural topic model does not assume that each document has to be ascribed to a single topic but rather to a collection of topics, we can investigate the extent to which topics co-occur in documents. The following plot visualizes correlations between topics by linking topics that are correlated above a certain threshold (set at 0.01).
+
+<<echo=FALSE>>=
+# topic correlations
+plot.topicCorr(topicCorr(test, cutoff = 0.01), vlabels = topics)
+@ 
+
+The connections between topics shows some interesting and plausible patterns. For example, it can be seen that the topics ``Fashion'', ``Art'', ``Film'', ``Books'', and ``Media'' cluster together or that ``Police'' is related to ``Legal/Court''. Overall, the results provide some additional validity for the topics extracted using the structural topic model.
+
+
+\section{Differences in Topic Proportions between Categories}
+
+As described in \citet{roberts2014structural}, the structural topic model not only extracts topics from a collection of documents but also allows us to directly model the prevalence of topics in specific documents based on a matrix of meta-covariates. While it is also possible to use covariates in order to model differences in words used to describe certain topics, we only focus on differences with regard to \textit{how much} a topic is discussed in specific articles.
+
+The following figures display the change in the proportion to discuss each of the 20 topics for articles that were included in each of the categories or not.
+
+<<echo=FALSE>>=
+# estimate effects
+prep <- estimateEffect(1:20 ~ emailed + facebook + front + tweeted + viewed + digital
+                     , test, meta = out$meta, uncertainty = "Global")
+@ 
+
+<<echo=FALSE,fig.width=7, fig.height=6>>=
+plot(prep, covariate = "emailed", topics = 1:20, model = test, xlim = c(-0.1,0.1)
+                  , method = "difference", cov.value1 = 1, cov.value2 = 0, main = "emailed"
+   , labeltype = "custom", custom.labels = topics, cex=.1)
+@ 
+For articles that were most emailed, we see for example that the proportion to discuss the presidential race is significantly lower (as compared to articles that were not most emailed). On the other hand, articles that were most emailed included higher proportions of the ``Health'' topic.
+
+\clearpage
+<<echo=FALSE,fig.width=7, fig.height=6>>=
+plot(prep, covariate = "facebook", topics = 1:20, model = test, xlim = c(-0.1,0.1)
+                  , method = "difference", cov.value1 = 1, cov.value2 = 0, main = "facebook"
+     , labeltype = "custom", custom.labels = topics)
+@ 
+For articles that were most shared on facebook, there are hardly any significant differences with regard to the proportions of either of the 20 topics. Only the proportion of ``Business'' topics appears to be significantly lower in articles that were shared on facebook as compared to articles that were not shared on facebook.
+
+\clearpage
+<<echo=FALSE,fig.width=7, fig.height=6>>=
+plot(prep, covariate = "front", topics = 1:20, model = test, xlim = c(-0.1,0.1)
+                  , method = "difference", cov.value1 = 1, cov.value2 = 0, main = "front"
+     , labeltype = "custom", custom.labels = topics)
+@ 
+Looking at the topic proportions for front page articles, we can again observe several significant differences. For example, front page articles included higher proportions of political issues (presidential race, Iran/Israel, Terrorism/Iraq) and lower proportions of fashion, media, literature, and related topics. This result provides some additional validity for the model results.
+
+\clearpage
+<<echo=FALSE,fig.width=7, fig.height=6>>=
+plot(prep, covariate = "tweeted", topics = 1:20, model = test, xlim = c(-0.1,0.1)
+                  , method = "difference", cov.value1 = 1, cov.value2 = 0, main = "tweeted"
+     , labeltype = "custom", custom.labels = topics)
+@ 
+Articles that were most tweeted in the period under consideration encompass higher proportions of topics described as ``technology'', ``terrorism'', ``financial'', and ``health''. Interestingly, the proportion of ``sports'' is lower in tweeted articles as compared to the remaining articles.
+
+\clearpage
+<<echo=FALSE,fig.width=7, fig.height=6>>=
+plot(prep, covariate = "viewed", topics = 1:20, model = test, xlim = c(-0.1,0.1)
+                  , method = "difference", cov.value1 = 1, cov.value2 = 0, main = "viewed"
+     , labeltype = "custom", custom.labels = topics)
+@ 
+Looking at articles that were most viewed, we can see that the proportion of the topic ``presidential race'' is significantly larger. On the other hand, the proportion of ``health'', ``art'', or ``technology'' is lower in articles that were most viewed.
+
+\clearpage
+<<echo=FALSE,fig.width=7, fig.height=6>>=
+plot(prep, covariate = "digital", topics = 1:20, model = test, xlim = c(-0.1,0.1)
+                  , method = "difference", cov.value1 = 1, cov.value2 = 0, main = "digital"
+     , labeltype = "custom", custom.labels = topics)
+@ 
+For articles that were included in the digital first page, no clear significant differences are observed. This could be due to the fact that most of the articles included in the analyses were part of the digital edition at some point (Only \Sexpr{round(100*(1 -mean(nyt_reduced$digital)),2)}\% of the articles included in the analyses were not part of the digital edition.)
+
+\clearpage
+\section{Conclusion / Next Steps}
+Overall, the structural topic model appears to recover plausible topics from the set of articles analyzed here. Subsequent iterations could investigate results for larger numbers of topics. Furthermore, additional analyses should be conducted in order to check robustness with regard to varying starting values. Other possible subsequent steps include:
+\begin{itemize}
+  \item investigate influence of other characteristics of articles (e.g. length of article)
+  \item link topic model results back to full data, include information about persistence in different categories
+  \item set up hazard model, explain how long a topic stays in the cycle
+\end{itemize}
+
+
+\bibliographystyle{/data/Copy/1-src/lit/apsr2006}
+\bibliography{/data/Copy/1-src/lit/Literature}
+\end{document}
+
