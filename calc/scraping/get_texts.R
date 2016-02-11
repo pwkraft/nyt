@@ -5,7 +5,7 @@ library(stringr)
 library(magrittr)
 library(xlsx)
 
-# reading in the xlsx file -> not run every time since it takes too long
+## reading in the xlsx file -> not run every time since it takes too long
 readxlsx <- F
 if(readxlsx == T){
     src_shared <- read.xlsx("../in/NYTimes Shared Digital Front Page 0218-0428_check.xlsx"
@@ -17,7 +17,7 @@ if(readxlsx == T){
      save.image("../in/src_nytimes.Rdata")
 } else load("../in/src_nytimes.Rdata")
 
-# function to parse the article from nyt, maybe I could switch from a loop to apply/plyr
+## function to parse the article from nyt, maybe I could switch from a loop to apply/plyr
 get_text <- function(urlvec, printurl = F){
     urlvec <- as.character(urlvec)
     out <- NULL
@@ -31,7 +31,7 @@ get_text <- function(urlvec, printurl = F){
             if(class(page)[1] == "try-error"){
                 warning(paste0("Error in url: ",urlvec[i]))
                 out <- rbind(out, c(urlvec[i], NA, NA, NA, NA, NA))
-            } else{
+            } else {
                 ## get title information
                 title <- page %>% html_nodes("title") %>% html_text()
                 title <- sub(" - The New York Times", "", title[1])
@@ -64,12 +64,35 @@ get_text <- function(urlvec, printurl = F){
     }
     if(printurl == F) close(pb)
     out <- data.frame(out, stringsAsFactors = FALSE)
-    colnames(out) <- c("link", "title", "keywords", "news_keywords", "text")
+    colnames(out) <- c("link", "title", "keywords", "news_keywords", "articleid" ,"text")
     return(out)
 }
 
 
 ### download articles
+
+## combine urls in single string, delete dublicates
+urls <- unique(na.omit(c(as.character(src_shared$Most.Viewed.URL)
+                       , as.character(src_shared$Most.Facebook.URL)
+                       , as.character(src_shared$Most.Emailed.URL)
+                       , as.character(src_shared$Most.Tweeted.URL)
+                       , as.character(src_front$url)
+                       , as.character(src_digital$url))))
+
+## scrape text and meta info
+nyt_articles <- get_text(urls)
+
+## repeat scraping for missing texts
+tmp <- length(urls) - sum(is.na(nyt_articles$text))
+while(tmp > 0){
+    urls_tmp <- urls[is.na(nyt_articles$text)]
+    nyt_tmp <- get_text(urls_tmp)
+    nyt_articles[is.na(nyt_articles$text), ] <- nyt_tmp
+    tmp <- length(urls_tmp) - sum(is.na(nyt_articles$text))
+}
+
+
+###############################
 
 # most viewed
 nyt_viewed <- get_text(src_shared$Most.Viewed.URL)
@@ -103,21 +126,17 @@ rm(nyt_front)
 
 ## digital (split up due to frequent connection problems)
 nyt_digital1 <- get_text(src_digital$url[1:5000])
-save.image("../in/nyt_tmp.Rdata")
-load("../in/nyt_tmp.Rdata")
-
 nyt_digital2 <- get_text(src_digital$url[5001:10000])
 nyt_digital3 <- get_text(src_digital$url[10001:length(src_digital$url)])
 nyt_digital <- rbind(nyt_digital1,nyt_digital2,nyt_digital3)
 nyt_digital$uniqueid <- seq(700001, 700000 + nrow(nyt_digital), 1)
-
 save(nyt_digital, file="../in/nyt_digital.Rdata")
 rm(nyt_digital)
 
 
 ### combine all dataframes
 
-combine <- F
+combine <- T
 if(combine == T){
     # load individual datasets
     load("../in/nyt_viewed.Rdata")

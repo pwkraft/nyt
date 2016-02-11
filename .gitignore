@@ -8,6 +8,7 @@ notes.org
 /data/
 /info/
 /analyses/prelim/cache/
+/calc/in/backup/
 *.csv
 *.dta
 *.Rhistory
