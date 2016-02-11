@@ -6,6 +6,7 @@ $ cat .gitignore
 .#*
 notes.org
 /data/
+/info/
 /analyses/prelim/cache/
 *.csv
 *.dta

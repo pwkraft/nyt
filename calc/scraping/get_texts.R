@@ -6,7 +6,7 @@ library(magrittr)
 library(xlsx)
 
 # reading in the xlsx file -> not run every time since it takes too long
-readxlsx <- T
+readxlsx <- F
 if(readxlsx == T){
     src_shared <- read.xlsx("../in/NYTimes Shared Digital Front Page 0218-0428_check.xlsx"
                           , sheetName = "Shared")
@@ -18,7 +18,7 @@ if(readxlsx == T){
 } else load("../in/src_nytimes.Rdata")
 
 # function to parse the article from nyt, maybe I could switch from a loop to apply/plyr
-get_text <- function(urlvec, printurl = FALSE){
+get_text <- function(urlvec, printurl = F){
     urlvec <- as.character(urlvec)
     out <- NULL
     if(printurl == F) pb <- txtProgressBar(min = 0, max = length(urlvec), style = 3)
@@ -27,30 +27,39 @@ get_text <- function(urlvec, printurl = FALSE){
         if(printurl == T) print(paste0(i,": ", urlvec[i]))
         if(!is.na(urlvec[i])){
             # parse html page
-            page <- html(urlvec[i])
+            page <- try(read_html(urlvec[i]), silent = T)
+            if(class(page)[1] == "try-error"){
+                warning(paste0("Error in url: ",urlvec[i]))
+                out <- rbind(out, c(urlvec[i], NA, NA, NA, NA, NA))
+            } else{
+                ## get title information
+                title <- page %>% html_nodes("title") %>% html_text()
+                title <- sub(" - The New York Times", "", title[1])
+                
+                ## get full text of article
+                text <- page %>% html_nodes("p") %>% html_text()
+                text <- text[text != "Advertisement"]
+                text <- paste(text, collapse = " ")
 
-            # get title information
-            title <- page %>% html_nodes("title") %>% html_text()
-            title <- sub(" - The New York Times", "", title[1])
-
-            # get full text of article
-            text <- page %>% html_nodes("p") %>% html_text()
-            text <- text[text != "Advertisement"]
-            text <- paste(text, collapse = " ") %>%
-                gsub("\n"," ", . ,fixed=T) %>% gsub("\t"," ", . ,fixed=T) %>%
-                gsub("[[:punct:]+]"," ", .) %>% gsub("[[:digit:]+]"," ", .) %>%
-                gsub("[[:space:]]+"," ", .) %>% str_trim() %>% tolower()
-
-            # get keywords
-            meta <- page %>% html_nodes("meta")
-            news_keywords <- meta[(xml_attr(meta, name="name") %in% "news_keywords")][1] %>%
-                xml_attr(name="content")
-            keywords <- meta[(xml_attr(meta, name="name") %in% "keywords")][1] %>%
-                xml_attr(name="content")
-
-            # combine outout
-            out <- rbind(out, c(urlvec[i], title, keywords, news_keywords, text))
-        } else out <- rbind(out, c(urlvec[i], NA, NA, NA, NA))
+                ## get keywords etc
+                meta <- page %>% html_nodes("meta")
+                news_keywords <- meta[(xml_attr(meta, attr="name") %in% c("news_keywords","subj"))]
+                if(length(news_keywords) > 0){
+                    news_keywords <- xml_attr(news_keywords, attr="content")[1]
+                } else news_keywords <- NA
+                keywords <- meta[(xml_attr(meta, attr="name") %in% c("keywords","subj"))]
+                if(length(keywords) > 0){
+                    keywords <- xml_attr(keywords, attr="content")[1]
+                } else keywords <- NA
+                articleid <- meta[(xml_attr(meta, attr="name") %in% "articleid")]
+                if(length(articleid) > 0){
+                    articleid <- xml_attr(articleid, attr="content")[1]
+                } else articleid <- NA
+                
+                ## combine outout
+                out <- rbind(out, c(urlvec[i], title, keywords, news_keywords, articleid, text))
+            }
+        } else out <- rbind(out, c(urlvec[i], NA, NA, NA, NA, NA))
         if(printurl == F) setTxtProgressBar(pb, i)
     }
     if(printurl == F) close(pb)
@@ -92,12 +101,16 @@ nyt_front$uniqueid <- seq(600001, 600000 + nrow(nyt_front), 1)
 save(nyt_front, file="../in/nyt_front.Rdata")
 rm(nyt_front)
 
-# digital (split up due to frequent connection problems)
+## digital (split up due to frequent connection problems)
 nyt_digital1 <- get_text(src_digital$url[1:5000])
+save.image("../in/nyt_tmp.Rdata")
+load("../in/nyt_tmp.Rdata")
+
 nyt_digital2 <- get_text(src_digital$url[5001:10000])
 nyt_digital3 <- get_text(src_digital$url[10001:length(src_digital$url)])
 nyt_digital <- rbind(nyt_digital1,nyt_digital2,nyt_digital3)
 nyt_digital$uniqueid <- seq(700001, 700000 + nrow(nyt_digital), 1)
+
 save(nyt_digital, file="../in/nyt_digital.Rdata")
 rm(nyt_digital)
 
