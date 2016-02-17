@@ -14,8 +14,8 @@ if(readxlsx == T){
                          , sheetName = "FrontPage")
     src_digital <- read.xlsx("../in/NYTimes Shared Digital Front Page 0218-0428_check.xlsx"
                            , sheetName = "DigitalEdition")
-     save.image("../in/src_nytimes.Rdata")
-} else load("../in/src_nytimes.Rdata")
+     save.image("../in/nyt_src.Rdata")
+} else load("../in/nyt_src.Rdata")
 
 ## function to parse the article from nyt, maybe I could switch from a loop to apply/plyr
 get_text <- function(urlvec, printurl = F){
@@ -35,7 +35,8 @@ get_text <- function(urlvec, printurl = F){
                 ## get title information
                 title <- page %>% html_nodes("title") %>% html_text()
                 title <- sub(" - The New York Times", "", title[1])
-                
+                title <- sub(" - NYTimes.com", "", title)
+
                 ## get full text of article
                 text <- page %>% html_nodes("p") %>% html_text()
                 text <- text[text != "Advertisement"]
@@ -55,7 +56,7 @@ get_text <- function(urlvec, printurl = F){
                 if(length(articleid) > 0){
                     articleid <- xml_attr(articleid, attr="content")[1]
                 } else articleid <- NA
-                
+
                 ## combine outout
                 out <- rbind(out, c(urlvec[i], title, keywords, news_keywords, articleid, text))
             }
@@ -84,92 +85,18 @@ nyt_articles <- get_text(urls)
 
 ## repeat scraping for missing texts
 tmp <- length(urls) - sum(is.na(nyt_articles$text))
+iteration <- 1
 while(tmp > 0){
     urls_tmp <- urls[is.na(nyt_articles$text)]
     nyt_tmp <- get_text(urls_tmp)
     nyt_articles[is.na(nyt_articles$text), ] <- nyt_tmp
     tmp <- length(urls_tmp) - sum(is.na(nyt_articles$text))
+    print(paste0("Iteration ",iteration,", improvements: ",tmp))
+    iteration <- iteration + 1
 }
 
-
-###############################
-
-# most viewed
-nyt_viewed <- get_text(src_shared$Most.Viewed.URL)
-nyt_viewed$uniqueid <- seq(200001, 200000 + nrow(nyt_viewed), 1)
-save(nyt_viewed, file="../in/nyt_viewed.Rdata")
-rm(nyt_viewed)
-
-# most facebook
-nyt_facebook <- get_text(src_shared$Most.Facebook.URL)
-nyt_facebook$uniqueid <- seq(300001, 300000 + nrow(nyt_facebook), 1)
-save(nyt_facebook, file="../in/nyt_facebook.Rdata")
-rm(nyt_facebook)
-
-# most emailed
-nyt_emailed <- get_text(src_shared$Most.Emailed.URL)
-nyt_emailed$uniqueid <- seq(400001, 400000 + nrow(nyt_emailed), 1)
-save(nyt_emailed, file="../in/nyt_emailed.Rdata")
-rm(nyt_emailed)
-
-# most tweeted
-nyt_tweeted <- get_text(src_shared$Most.Tweeted.URL)
-nyt_tweeted$uniqueid <- seq(500001, 500000 + nrow(nyt_tweeted), 1)
-save(nyt_tweeted, file="../in/nyt_tweeted.Rdata")
-rm(nyt_tweeted)
-
-# front page
-nyt_front <- get_text(src_front$url)
-nyt_front$uniqueid <- seq(600001, 600000 + nrow(nyt_front), 1)
-save(nyt_front, file="../in/nyt_front.Rdata")
-rm(nyt_front)
-
-## digital (split up due to frequent connection problems)
-nyt_digital1 <- get_text(src_digital$url[1:5000])
-nyt_digital2 <- get_text(src_digital$url[5001:10000])
-nyt_digital3 <- get_text(src_digital$url[10001:length(src_digital$url)])
-nyt_digital <- rbind(nyt_digital1,nyt_digital2,nyt_digital3)
-nyt_digital$uniqueid <- seq(700001, 700000 + nrow(nyt_digital), 1)
-save(nyt_digital, file="../in/nyt_digital.Rdata")
-rm(nyt_digital)
-
-
-### combine all dataframes
-
-combine <- T
-if(combine == T){
-    # load individual datasets
-    load("../in/nyt_viewed.Rdata")
-    load("../in/nyt_facebook.Rdata")
-    load("../in/nyt_emailed.Rdata")
-    load("../in/nyt_tweeted.Rdata")
-    load("../in/nyt_front.Rdata")
-    load("../in/nyt_digital.Rdata")
-
-    # add type variable
-    nyt_viewed$type <- "viewed"
-    nyt_facebook$type <- "facebook"
-    nyt_emailed$type <- "emailed"
-    nyt_tweeted$type <- "tweeted"
-    nyt_front$type <- "front"
-    nyt_digital$type <- "digital"
-
-    # combine dataframes
-    nyt_combined <- rbind(nyt_viewed, nyt_facebook, nyt_emailed
-                          , nyt_tweeted, nyt_front, nyt_digital)
-
-    # create common ids for articles and combine them in dataframe
-    # I used urls here first, but titles work better
-    ids <- unique(nyt_combined$title)
-    ids <- data.frame(id = seq(100001,100000+length(ids),1), title = ids)
-
-    # merge ids to dataframe
-    nyt_combined <- merge(nyt_combined, ids, all = TRUE)
-    
-    save(nyt_combined, file = "../in/nyt_combined.Rdata")
-}
-
-
+## save dataset
+save(nyt_articles, file="../in/nyt_articles.Rdata")
 
 
 

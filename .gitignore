@@ -6,6 +6,7 @@ $ cat .gitignore
 .#*
 notes.org
 /data/
+/calc/in/
 /info/
 /analyses/prelim/cache/
 /calc/in/backup/
