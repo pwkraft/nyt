@@ -1,7 +1,4 @@
-##################################
-## Analyses for MPSA 2016 paper ##
-##################################
-
+## ----echo=FALSE,results='hide',message=FALSE-----------------------------
 
 rm(list=ls())
 library(stm)
@@ -11,14 +8,24 @@ library(car)
 library(ggplot2)
 
 ## load data
-load("in/nyt_combined.Rdata")
-load("in/nyt_reduced.Rdata")
-load("in/nyt_polecon.Rdata")
-load("in/nyt_readab.Rdata")
-load("in/stm_polecon.Rdata")
+load("../in/nyt_combined.Rdata")
+load("../in/nyt_reduced.Rdata")
+load("../in/nyt_polecon.Rdata")
+load("../in/nyt_readab.Rdata")
+load("../in/stm_select.Rdata")
+load("../in/stm_polecon.Rdata")
 
+
+## ----echo=FALSE----------------------------------------------------------
 
 head(data.frame(nyt_reduced[nchar(nyt_reduced$title)<20,c(3,7:14)]))
+
+
+## ----echo=FALSE----------------------------------------------------------
+labelTopics(stm_select)
+
+## ----echo=FALSE----------------------------------------------------------
+
 labelTopics(stm_polecon)
 
 

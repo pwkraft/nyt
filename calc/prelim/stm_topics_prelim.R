@@ -101,38 +101,58 @@ gc()
 
 ### calculate readability
 
-nyt_readab <- readability(nyt_reduced$text, measure = "Flesch.Kincaid")
+nyt_readab <- readability(nyt_reduced$text)
 save(nyt_readab, file = "in/nyt_readab.Rdata")
 rm(nyt_readab)
 gc()
 
 
+### stm analyses to select politics/econ articles
 
-### stm analyses
-
-processed <- textProcessor(nyt_reduced$text
+processed_select <- textProcessor(nyt_reduced$text
                       , metadata = nyt_reduced[c("title","emailed","facebook","front","tweeted"
                                                    ,"viewed","digital_opinion","digital_topnews"
                                                    ,"digital_bottom")])
-out <- prepDocuments(processed$documents, processed$vocab
-                          , processed$meta, lower.thresh = 10)
-length(out$vocab)
-stm_polecon <- stm(out$documents, out$vocab, K = 20
+out_select <- prepDocuments(processed_select$documents, processed_select$vocab
+                          , processed_select$meta, lower.thresh = 10)
+length(out_select$vocab) # vocabulary < 10000 for "Spectral" analyses
+stm_select <- stm(out_select$documents, out_select$vocab, K = 5
                   , prevalence =~ emailed + facebook + front + tweeted + viewed +
                         digital_opinion + digital_topnews + digital_bottom
-                  , max.em.its = 75, data = out$meta, init.type = "Spectral")
+                  , max.em.its = 75, data = out_select$meta, init.type = "Spectral")
 
 ## explore words associated with each topic
-labelTopics(stm_polecon)
-topic_polecon <- apply(stm_polecon$theta, 1, function(x) which(x == max(x)))
-topic_polecon <- topic_polecon %in% c(1,3,7,10,11,12,18,19)
+labelTopics(stm_select)
+topic_polecon <- apply(stm_select$theta, 1, function(x) which(x == max(x)))
+topic_polecon <- topic_polecon == 1 | topic_polecon == 3 | topic_polecon == 5
 
 ## reduce dataset to politics/econ topic
 nyt_polecon <- nyt_reduced[topic_polecon,]
 save(nyt_polecon, file = "in/nyt_polecon.Rdata")
 
 ## save and delete stm for selection
-save(processed, out, topic_polecon, stm_polecon, nyt_polecon, file = "in/stm_polecon.Rdata")
+save(processed_select, out_select, stm_select, file = "in/stm_select.Rdata")
+rm(processed_select, out_select, stm_select)
 gc()
+
+
+### stm analysis on remaining articles
+
+processed_polecon <- textProcessor(nyt_polecon$text
+                         , metadata = nyt_polecon[c("title","emailed","facebook","front","tweeted"
+                                                   ,"viewed","digital_opinion","digital_topnews"
+                                                   ,"digital_bottom")])
+out_polecon <- prepDocuments(processed_polecon$documents, processed_polecon$vocab
+                           , processed_polecon$meta, lower.thresh = 10)
+length(out_polecon$vocab)
+stm_polecon <- stm(out_polecon$documents, out_polecon$vocab, K = 10
+                  , prevalence =~ emailed + facebook + front + tweeted + viewed +
+                        digital_opinion + digital_topnews + digital_bottom
+                  , max.em.its = 75, data = out_polecon$meta, init.type = "Spectral")
+
+
+### save results
+save(processed_polecon, out_polecon, stm_polecon, file = "in/stm_polecon.Rdata")
+
 
 
