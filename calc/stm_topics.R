@@ -117,22 +117,27 @@ processed <- textProcessor(nyt_reduced$text
 out <- prepDocuments(processed$documents, processed$vocab
                           , processed$meta, lower.thresh = 10)
 length(out$vocab)
-stm_polecon <- stm(out$documents, out$vocab, K = 20
+stm_res <- stm(out$documents, out$vocab, K = 20
                   , prevalence =~ emailed + facebook + front + tweeted + viewed +
                         digital_opinion + digital_topnews + digital_bottom
                   , max.em.its = 75, data = out$meta, init.type = "Spectral")
 
 ## explore words associated with each topic
-labelTopics(stm_polecon)
-topic_polecon <- apply(stm_polecon$theta, 1, function(x) which(x == max(x)))
-topic_polecon <- topic_polecon %in% c(1,3,7,10,11,12,18,19)
+labelTopics(stm_res)
+topic_pred <- apply(stm_res$theta, 1, function(x) which(x == max(x)))
+View(nyt_reduced[topic_pred == 5,])
+topics <- c("Presidential Race","Books","Conflicts","Cities","Health","Movies","Education/Inequality"
+            ,"Food","Theater","Legal/Court","Police","Iran/Israel","Baseball","Religion"
+            ,"Basketball","Fashion","Natural Disaster","International","Economy","Family")
+topics_polecon <- c(1,3,7,10,11,12,18,19)
+topics[topics_polecon]
 
 ## reduce dataset to politics/econ topic
-nyt_polecon <- nyt_reduced[topic_polecon,]
+nyt_polecon <- nyt_reduced[topic_pred %in% topics_polecon,]
 save(nyt_polecon, file = "in/nyt_polecon.Rdata")
 
 ## save and delete stm for selection
-save(processed, out, topic_polecon, stm_polecon, nyt_polecon, file = "in/stm_polecon.Rdata")
-gc()
+save(processed, out, stm_res, topic_pred, topics, topics_polecon, file = "in/stm_res.Rdata")
+
 
 
