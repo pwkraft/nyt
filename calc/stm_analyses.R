@@ -30,10 +30,11 @@ nyt_share_var <- c("viewed","facebook","emailed","tweeted")
 
 ## indicative words for each topic (highest probability)
 pdf("fig/words.pdf")
-par(mfcol = c(2,2), cex = .5, mar=rep(0,4))
+par(mfrow = c(2,2), cex = .5, mar=c(0,0,2,0))
 plot.STM(stm_res, type = "labels", topics = 1:5)
-plot.STM(stm_res, type = "labels", topics = 6:10)
 plot.STM(stm_res, type = "labels", topics = 11:15)
+par(mar = c(2, 0, 0, 0))
+plot.STM(stm_res, type = "labels", topics = 6:10)
 plot.STM(stm_res, type = "labels", topics = 16:20)
 dev.off()
 par(mfcol = c(1,1), cex = 1, mar = c(5, 4, 4, 2) + 0.1, mgp = c(3,1,0))
@@ -67,18 +68,18 @@ prep <- estimateEffect(1:20 ~ emailed + facebook + front + tweeted + viewed +
 
 ## plot results
 pdf("fig/res_nyt.pdf", height = 5)
-par(mfcol = c(2,2), mar = c(0, 3, 3, 1), mgp = c(1,1,0), cex=.6)
+par(mfrow = c(2,2), mar = c(0, 3, 3, 1), mgp = c(1,1,0), cex=.6)
 plot.estimateEffect(prep, covariate = "front", model = stm_res, xlim = c(-.25,.25)
                     , ylab = "Front Page", method = "difference", cov.value1 = 1, cov.value2 = 0
                     , labeltype = "custom", custom.labels = topics, xaxt="n")
-plot.estimateEffect(prep, covariate = "digital_topnews", model = stm_res, xlim = c(-.25,.25)
-                    , method = "difference", cov.value1 = 1, cov.value2 = 0
-                    , ylab = "Top News (Digital Edition)", labeltype = "custom"
-                    , custom.labels = topics, xaxt="n")
-par(mar = c(3, 3, 0, 1), mgp = c(1,1,0))
 plot.estimateEffect(prep, covariate = "digital_opinion", model = stm_res
                     , xlim = c(-.25,.25), method = "difference", cov.value1 = 1, cov.value2 = 0
                     , ylab = "Opinion (Digital Edition)", labeltype = "custom"
+                    , custom.labels = topics, xaxt="n")
+par(mar = c(3, 3, 0, 1), mgp = c(1,1,0))
+plot.estimateEffect(prep, covariate = "digital_topnews", model = stm_res, xlim = c(-.25,.25)
+                    , method = "difference", cov.value1 = 1, cov.value2 = 0
+                    , ylab = "Top News (Digital Edition)", labeltype = "custom"
                     , custom.labels = topics)
 plot.estimateEffect(prep, covariate = "digital_bottom", model = stm_res
                     , xlim = c(-.25,.25), method = "difference", cov.value1 = 1, cov.value2 = 0
