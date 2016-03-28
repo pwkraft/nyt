@@ -128,7 +128,7 @@ topic_pred <- apply(stm_res$theta, 1, function(x) which(x == max(x)))
 View(nyt_reduced[topic_pred == 5,])
 topics <- c("Presidential Race","Books","Conflicts","Cities","Health","Movies","Education/Inequality"
             ,"Food","Theater","Legal/Court","Police","Iran/Israel","Baseball","Religion"
-            ,"Basketball","Fashion","Natural Disaster","International","Economy","Family")
+            ,"Basketball","Fashion","Natural Disaster","International/Opinion","Economy","Family")
 topics_polecon <- c(1,3,7,10,11,12,18,19)
 topics[topics_polecon]
 

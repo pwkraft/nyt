@@ -9,6 +9,7 @@ library(dplyr)
 library(tidyr)
 library(car)
 library(ggplot2)
+library(gridExtra)
 
 ## load data
 load("in/nyt_combined.Rdata")
@@ -18,82 +19,189 @@ load("in/nyt_readab.Rdata")
 load("in/stm_res.Rdata")
 
 ## separate metadata
-nyt_part <- c("digital_bottom","digital_opinion","digital_topnews","front")
-nyt_share <- c("emailed","facebook","tweeted","viewed")
+#nyt_part <- c("digital_bottom","digital_opinion","digital_topnews","front")
+#nyt_share <- c("emailed","facebook","tweeted","viewed")
+nyt_part <- c("Front Page","Opinion (Digital Edition)","Top News (Digital Edition)"
+              ,"Bottom Part (Digital Edition)")
+nyt_share <- c("Most Viewed","Most Emailed","Shared on Facebook","Tweeted")
 
+## function to share legend in ggplot grid
+## code from http://stackoverflow.com/questions/13649473/add-a-common-legend-for-combined-ggplots
+g_legend<-function(a.gplot){
+  tmp <- ggplot_gtable(ggplot_build(a.gplot))
+  leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
+  legend <- tmp$grobs[[leg]]
+  return(legend)}
 
+### basic summaries / overview
 
+## indicative words for each topic (highest probability)
+pdf("fig/words.pdf")
+par(mfcol = c(2,2), cex = .5, mar=rep(0,4))
+plot.STM(stm_res, type = "labels", topics = 1:5)
+plot.STM(stm_res, type = "labels", topics = 6:10)
+plot.STM(stm_res, type = "labels", topics = 11:15)
+plot.STM(stm_res, type = "labels", topics = 16:20)
+dev.off()
+par(mfcol = c(1,1), cex = 1, mar = c(5, 4, 4, 2) + 0.1, mgp = c(3,1,0))
 
-plot.STM(stm_res, type = "summary", custom.labels = topics, text.cex=.6)
+## proportions of topics (all)
+pdf("fig/prop.pdf", height = 4)
+par(mar = c(5, 2, 2, 2) + 0.1)
+plot.STM(stm_res, type = "summary", custom.labels = topics, text.cex=.7, main = NA)
+dev.off()
+
+## proportion of topics (polecon)
+pdf("fig/prop_polecon.pdf", height = 4)
+par(mar = c(5, 2, 2, 2) + 0.1)
 plot.STM(stm_res, type = "summary", topics = topics_polecon
-       , custom.labels = topics[topics_polecon], text.cex=.6)
+         , custom.labels = topics[topics_polecon], text.cex=.7, main = NA)
+dev.off()
 
-plot.STM(stm_res, type = "perspective", topics = c(1,3))
+## example for topic differences
+pdf("fig/perspective.pdf", height = 4)
+par(mar = c(1, 1, 1, 1) + 0.1)
+plot.STM(stm_res, type = "perspective", topics = c(1,3), custom.labels = topics[c(1,3)])
+dev.off()
 
 
-prep <- estimateEffect(topics_polecon ~ emailed + facebook + front + tweeted + viewed +
+### estimate effect of meta-information (all topics)
+
+## model estimation
+prep <- estimateEffect(1:20 ~ emailed + facebook + front + tweeted + viewed +
                            digital_opinion + digital_topnews + digital_bottom
                      , stm_res, meta = out$meta, uncertainty = "Global")
-par(mfrow = c(2,2))
-plot.estimateEffect(prep, covariate = "front", model = stm_res, xlim = c(-.3,.3)
-                  , method = "difference", cov.value1 = 1, cov.value2 = 0, main = "front"
-                  , labeltype = "custom", custom.labels = topics[topics_polecon])
-plot.estimateEffect(prep, covariate = "digital_topnews", model = stm_res, xlim = c(-.3,.3)
-                  , method = "difference", cov.value1 = 1, cov.value2 = 0
-                  , main = "digital_topnews", labeltype = "custom"
-                  , custom.labels = topics[topics_polecon])
-plot.estimateEffect(prep, covariate = "digital_bottom", model = stm_res
-                  , xlim = c(-.3,.3), method = "difference", cov.value1 = 1, cov.value2 = 0
-                  , main = "digital_bottom", labeltype = "custom"
-                  , custom.labels = topics[topics_polecon])
+
+## plot results
+pdf("fig/res_nyt.pdf", height = 5)
+par(mfcol = c(2,2), mar = c(0, 3, 3, 1), mgp = c(1,1,0), cex=.6)
+plot.estimateEffect(prep, covariate = "front", model = stm_res, xlim = c(-.25,.25)
+                    , ylab = "Front Page", method = "difference", cov.value1 = 1, cov.value2 = 0
+                    , labeltype = "custom", custom.labels = topics, xaxt="n")
+plot.estimateEffect(prep, covariate = "digital_topnews", model = stm_res, xlim = c(-.25,.25)
+                    , method = "difference", cov.value1 = 1, cov.value2 = 0
+                    , ylab = "Top News (Digital Edition)", labeltype = "custom"
+                    , custom.labels = topics, xaxt="n")
+par(mar = c(3, 3, 0, 1), mgp = c(1,1,0))
 plot.estimateEffect(prep, covariate = "digital_opinion", model = stm_res
-                  , xlim = c(-.3,.3), method = "difference", cov.value1 = 1, cov.value2 = 0
-                  , main = "digital_opinion", labeltype = "custom"
-                  , custom.labels = topics[topics_polecon])
+                    , xlim = c(-.25,.25), method = "difference", cov.value1 = 1, cov.value2 = 0
+                    , ylab = "Opinion (Digital Edition)", labeltype = "custom"
+                    , custom.labels = topics)
+plot.estimateEffect(prep, covariate = "digital_bottom", model = stm_res
+                    , xlim = c(-.25,.25), method = "difference", cov.value1 = 1, cov.value2 = 0
+                    , ylab = "Bottom Part (Digital Edition)", labeltype = "custom"
+                    , custom.labels = topics)
+dev.off()
 
-par(mfrow = c(2,2))
-plot.estimateEffect(prep, covariate = "emailed", model = stm_res
-                  , xlim = c(-.3,.3), method = "difference", cov.value1 = 1, cov.value2 = 0
-                  , main = "emailed", labeltype = "custom", custom.labels = topics[topics_polecon])
-plot.estimateEffect(prep, covariate = "facebook", model = stm_res
-                  , xlim = c(-.3,.3), method = "difference", cov.value1 = 1, cov.value2 = 0
-                  , main = "facebook", labeltype = "custom", custom.labels = topics[topics_polecon])
+pdf("fig/res_share.pdf", height = 5)
+par(mfcol = c(2,2), mar = c(0, 3, 3, 1), mgp = c(1,1,0), cex=.6)
+plot.estimateEffect(prep, covariate = "viewed", model = stm_res, xlim = c(-.25,.25)
+                    , ylab = "Most Viewed", method = "difference", cov.value1 = 1, cov.value2 = 0
+                    , labeltype = "custom", custom.labels = topics, xaxt="n")
+plot.estimateEffect(prep, covariate = "emailed", model = stm_res, xlim = c(-.25,.25)
+                    , method = "difference", cov.value1 = 1, cov.value2 = 0
+                    , ylab = "Emailed", labeltype = "custom"
+                    , custom.labels = topics, xaxt="n")
+par(mar = c(3, 3, 0, 1), mgp = c(1,1,0))
 plot.estimateEffect(prep, covariate = "tweeted", model = stm_res
-                  , xlim = c(-.3,.3), method = "difference", cov.value1 = 1, cov.value2 = 0
-                  , main = "tweeted", labeltype = "custom", custom.labels = topics[topics_polecon])
-plot.estimateEffect(prep, covariate = "viewed", model = stm_res
-                  , xlim = c(-.3,.3), method = "difference", cov.value1 = 1, cov.value2 = 0
-                  , main = "viewed", labeltype = "custom", custom.labels = topics[topics_polecon])
+                    , xlim = c(-.25,.25), method = "difference", cov.value1 = 1, cov.value2 = 0
+                    , ylab = "Tweeted", labeltype = "custom"
+                    , custom.labels = topics)
+plot.estimateEffect(prep, covariate = "facebook", model = stm_res
+                    , xlim = c(-.25,.25), method = "difference", cov.value1 = 1, cov.value2 = 0
+                    , ylab = "Shared on Facebook", labeltype = "custom"
+                    , custom.labels = topics)
+dev.off()
 
 
-### look at topic proportions for each category over time
-topic_select <- apply(stm_res$theta, 1, function(x) which(x == max(x)))
-topic_select <- topic_select %in% topics_polecon
-topic_select <- nyt_reduced$title[topic_select == T]
+### estimate effect of meta-information (polecon)
 
+## model estimation
+prep <- estimateEffect(topics_polecon ~ emailed + facebook + front + tweeted + viewed +
+                         digital_opinion + digital_topnews + digital_bottom
+                       , stm_res, meta = out$meta, uncertainty = "Global")
+
+## plot results
+pdf("fig/res_nyt_polecon.pdf", height = 4)
+par(mfcol = c(2,2), mar = c(0, 3, 3, 1), mgp = c(1,1,0), cex=.6)
+plot.estimateEffect(prep, covariate = "front", model = stm_res, xlim = c(-.25,.25)
+                    , ylab = "Front Page", method = "difference", cov.value1 = 1, cov.value2 = 0
+                    , labeltype = "custom", custom.labels = topics[topics_polecon], xaxt="n")
+plot.estimateEffect(prep, covariate = "digital_topnews", model = stm_res, xlim = c(-.25,.25)
+                    , method = "difference", cov.value1 = 1, cov.value2 = 0
+                    , ylab = "Top News (Digital Edition)", labeltype = "custom"
+                    , custom.labels = topics[topics_polecon], xaxt="n")
+par(mar = c(3, 3, 0, 1), mgp = c(1,1,0))
+plot.estimateEffect(prep, covariate = "digital_opinion", model = stm_res
+                    , xlim = c(-.25,.25), method = "difference", cov.value1 = 1, cov.value2 = 0
+                    , ylab = "Opinion (Digital Edition)", labeltype = "custom"
+                    , custom.labels = topics[topics_polecon])
+plot.estimateEffect(prep, covariate = "digital_bottom", model = stm_res
+                    , xlim = c(-.25,.25), method = "difference", cov.value1 = 1, cov.value2 = 0
+                    , ylab = "Bottom Part (Digital Edition)", labeltype = "custom"
+                    , custom.labels = topics[topics_polecon])
+dev.off()
+
+pdf("fig/res_share_polecon.pdf", height = 4)
+par(mfcol = c(2,2), mar = c(0, 3, 3, 1), mgp = c(1,1,0), cex=.6)
+plot.estimateEffect(prep, covariate = "viewed", model = stm_res, xlim = c(-.25,.25)
+                    , ylab = "Most Viewed", method = "difference", cov.value1 = 1, cov.value2 = 0
+                    , labeltype = "custom", custom.labels = topics[topics_polecon], xaxt="n")
+plot.estimateEffect(prep, covariate = "emailed", model = stm_res, xlim = c(-.25,.25)
+                    , method = "difference", cov.value1 = 1, cov.value2 = 0
+                    , ylab = "Emailed", labeltype = "custom"
+                    , custom.labels = topics[topics_polecon], xaxt="n")
+par(mar = c(3, 3, 0, 1), mgp = c(1,1,0))
+plot.estimateEffect(prep, covariate = "tweeted", model = stm_res
+                    , xlim = c(-.25,.25), method = "difference", cov.value1 = 1, cov.value2 = 0
+                    , ylab = "Tweeted", labeltype = "custom"
+                    , custom.labels = topics[topics_polecon])
+plot.estimateEffect(prep, covariate = "facebook", model = stm_res
+                    , xlim = c(-.25,.25), method = "difference", cov.value1 = 1, cov.value2 = 0
+                    , ylab = "Shared on Facebook", labeltype = "custom"
+                    , custom.labels = topics[topics_polecon])
+dev.off()
+
+
+
+### topic proportions for each category over time
+
+## prepare data
 nyt_series <- nyt_combined %>% select(date, title, type) %>%
     left_join(bind_cols(select(nyt_reduced, title), data.frame(stm_res$theta))) %>%
     na.omit() %>% group_by(date, type) %>% select(-title) %>% summarize_each(funs(mean)) %>%
     gather("topic","proportion",3:ncol(.))
+nyt_series$type <- factor(nyt_series$type
+                          , levels = c("front","digital_opinion","digital_topnews","digital_bottom"
+                                       ,"viewed","emailed","facebook","tweeted")
+                          , labels = c("Front Page","Opinion (Digital Edition)"
+                                       ,"Top News (Digital Edition)","Bottom Part (Digital Edition)"
+                                       ,"Most Viewed","Most Emailed","Shared on Facebook","Tweeted"))
 nyt_series$topic <- as.numeric(gsub("X","",nyt_series$topic))
 nyt_series$topic <- factor(nyt_series$topic, labels = topics)
 
+## polecon
 ggplot(filter(nyt_series, topic %in% topics[topics_polecon] & type %in% nyt_part)
        , aes(x = date, y = proportion, col = topic)) + geom_line() + facet_wrap(~type) +
-  theme_bw() + theme(legend.position = "bottom")
+  theme_bw() + theme(legend.position = "bottom") + ylab("Proportion") + xlab("Date") +
+  theme(axis.text.x = element_text(angle = 50, hjust = 1)) + scale_color_discrete(name = "Topic")
+ggsave("fig/series_nyt.pdf", height = 5)
 
 ggplot(filter(nyt_series, topic %in% topics[topics_polecon] & type %in% nyt_share)
-       , aes(x = date, y = proportion, col = topic)) + geom_line() + facet_wrap(~type) +
-  theme_bw() + theme(legend.position = "bottom")
+       , aes(x = date, y = proportion, col = topic)) + geom_line() + facet_wrap(~type) + theme_bw() +
+  theme(legend.position = "bottom") + ylab("Proportion") + xlab("Date") +
+  theme(axis.text.x = element_text(angle = 50, hjust = 1)) + scale_color_discrete(name = "Topic")
+ggsave("fig/series_share.pdf", height = 5)
 
-ggplot(filter(nyt_series, topic %in% c("Presidential Race", "Legal/Court", "Police") & type %in% nyt_part)
-       , aes(x = date, y = proportion, col = topic)) + geom_line() + facet_wrap(~type) +
-  theme_bw() + theme(legend.position = "bottom")
 
-ggplot(filter(nyt_series, topic %in% c("Presidential Race", "Legal/Court", "Police") & type %in% nyt_share)
-       , aes(x = date, y = proportion, col = topic)) + geom_line() + facet_wrap(~type) +
+## 3 main topics
+p1 <- ggplot(filter(nyt_series, topic %in% c("Presidential Race", "Legal/Court", "Police") & type %in% nyt_part)
+       , aes(x = date, y = proportion, col = topic, lty = topic)) + geom_line() + facet_wrap(~type) +
   theme_bw() + theme(legend.position = "bottom")
-
+p2 <- ggplot(filter(nyt_series, topic %in% c("Presidential Race", "Legal/Court", "Police") & type %in% nyt_share)
+       , aes(x = date, y = proportion, col = topic, lty = topic)) + geom_line() + facet_wrap(~type) + theme_bw()
+grid.arrange(arrangeGrob(p1 + theme(legend.position="none"), p2 + theme(legend.position="none")
+                         , nrow=1), g_legend(p1), nrow=2,heights=c(10, 1))
 
 
 ### complexity by category
@@ -106,7 +214,8 @@ ci <- function(x){
     return(out)
 }
 
-test <- nyt_reduced %>% mutate(readab = nyt_readab) %>% right_join(nyt_polecon) %>% data.frame()
+test <- nyt_reduced %>% mutate(readab = nyt_readab) %>% filter(topic_pred %in% topics_polecon) %>% 
+  data.frame()
 readab_summary <- data.frame(NULL)
 for(i in c("emailed", "facebook", "front", "tweeted", "viewed", "digital_opinion"
          , "digital_topnews", "digital_bottom")){
@@ -119,11 +228,10 @@ colnames(readab_summary)[1:3] <- c("mean","cilo","cihi")
 ggplot(readab_summary, aes(y = mean, ymin = cilo, ymax = cihi, x = variable)) + geom_pointrange() + theme_bw() + coord_flip()
 
 
-
-
 ### switches between categories
 
-nyt_switch <- nyt_combined %>% filter(title %in% topic_select) %>% select(date, title, type) %>%
+## only polecon articles
+nyt_switch <- nyt_combined %>% filter(title %in% nyt_polecon$title) %>% select(date, title, type) %>%
     filter(title %in% unique(title[duplicated(title)])) %>% arrange(title, date) %>%
     group_by(title) %>% mutate(day = as.numeric(date - min(date))) %>% unique()
 tmp <- nyt_switch %>% group_by(title) %>% summarize(maxday = max(day)) %>% filter(maxday==0)
