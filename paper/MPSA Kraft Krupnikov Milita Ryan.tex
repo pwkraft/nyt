@@ -19,6 +19,8 @@
 \usepackage{setspace}
 \usepackage{sectsty}
 \usepackage[title]{appendix}
+\usepackage{multicol}
+\usepackage{enumerate}
 %\renewcommand{\footnotesize}{\normalsize}
 %\sectionfont{\normalsize}
 %\subsectionfont{\normalsize}
@@ -60,6 +62,7 @@ On-line social networks are larger than off-line social networks, but it is uncl
 
 Finally, the most politically engaged are the most likely to share political information on social media \citep{XXXX}. The most politically engaged are also the most likely to discuss politics \citep{Huckfeldt2001}. The motivations in both instances are quite similar. As Ahn, Huckfeldt, and Ryan write \citeyearpar{AhnHuckfeldtRyan2014}, "We cannot expect opinion leaders to provide information that is balance, objective, and value free" (255). Opinion leaders discuss politics and post information about it on social media because they care about politics and they want to influence people. This is the most important way that the social communication is unchanged even with the internet. The modern two-step flow, like the two-step flow of previous eras, operates because individuals want to influence how people think about politics.
 
+
 \section{Endogenous Agenda Setting}
 
 To the extent that social media changes communication, it is not about interactions among peers. The major change involves how the news media interacts with the politically engaged members of the public. Whether referring to the news media as agenda setters or gatekeepers, the major theories of information flow in the 20th Century assumed that the media were the first movers in deciding what issues were important \citep{IyengarKinder1987}. Obviously, this view was always a bit oversimplified--as the "two-step flow" implies, the politically engaged members of the public acted as a second gatekeeper in regards to what stories most people heard. Further, 20th century editors would choose stories in part based on what stories they thought would sell newspapers \citep{XXXX}. For this reason, Thorson and Wells \citeyearpar{ThorsonWells2015} argue that we should think of modern gatekeeping in terms of "curated flows": journalists select certain stories to post on a website, engaged members select a subset of those to read, and they share an even smaller subset.
@@ -72,121 +75,137 @@ Hence, while this new form of agenda setting has many potential implications, th
 
 
 \section{Data} 
+
 The data for this study was collected from the website of \textit{The New York Times} between February 18 and April 28, 2015. We created a macro using Visual Basic that performed an exhaustive scrape of key areas of the website.\footnote{Standard web scraping platforms and programs (e.g., Outwit, rvest) were unable to extract all of the requested information, as the three subsections intermittently experienced html changes, such as an alteration in the font size or heading classification for a particular article.  Changes such as this will cause traditional web scraping programs to skip over these articles. Thus, it was necessary to write a macro that was customized to these three subsections of \textit{The New York Times} website. Using html parsing, we documented the source code for each subsection and noted common changes to the html over a course of three days. For instance, if a text-only article is replaced on the following day by one with embedded video, the source code will change to reflect that. The macro was programmed to run every 12 hours and to export the scraped material to an excel file with three tabs (one for each subsection). Every time the macro ran, it created an additional excel file (e.g., NYT01, NYT02, etc.).} The macro consisted of three web scrapers that extracted article title, author, date, time, and URL for (1) the front page of \textit{The New York Times}, which mirrors the lead stories on the hard copy of the newspaper, (2) the digital front page, which contains more stories than the hard copy of the front page, and (3) a subset of the front page that lists the top ten most viewed, most emailed, most shared articles.
 
 This data collection allows us to analyze every story that appeared on the hardcopy and digital front pages of the \textit{New York Times}. It also allows us to see which types of stories the journalists see as more important--those that make the front page or receive a prominent placement on the digital front page. It also allows us to separate the agenda of the engaged public into separate categories in a way that is not capable with off-line social network research. We can see the stories they believe are important--those that make the most viewed list--and separate those stories from the stories they believe are the most important for other people to know--the most share on Facebook, Twitter, or via email.
 
+After scraping the content of all \textit{New York Times} articles for the given time frame, we created a reduced dataset where each unique article is included as a single observation. Articles that appeared several times in the original raw collection (e.g. most tweeted article for several days) or through different channels (e.g. most tweeted and most viewed) were therefore combined in a single observation. Overall, the reduced dataset contains 5504 \textit{unique} articles for subsequent analyses. For each observation, we created a vector of dichotomous variables indicating whether the respective article was included in each of the categories (most emailed, most shared on Facebook, etc.) at least once. These variables represent the matrix of covariates that will be used to model differences in topical prevalence in the collection of documents.
 
 
+\section{Distribution of Topics in New York Times Articles}
 
-\section{Description of Dataset}
+We rely on a structural topic model to extract and summarize differences in content between the articles. After some preliminary analyses, we decided to estimate a total of 20 topics using the \texttt{stm} package in \texttt{R} \citep[using spectral initialization, see][]{roberts2014structural,roberts2014stm}. The total number was set such that single topics do not represent mixtures of broad news categories (such as national and international politics). While reducing the number of topics creates some important overlaps within topics, the substantial results discussed below are robust for varying model specifications. In order for the estimation to be computationally more tractable, we removed terms from the dictionary that only appeared in 10 articles or less. Figure~\ref{fig:words} presents an overview of the extracted topics by displaying words that are highly associated with the respective topic (i.e. words that have highest probabilities to appear in a given topic, see \citealt{roberts2014stm} for more details).
 
-In order to analyze the content of the NYT articles using the structural topic model approach presented by \citet{roberts2014structural}, I transformed the scraped articles to a reduced dataset where each unique article is included as a \textit{single} observation. Articles that appeared several times in the original raw collection (e.g. most tweeted article for several days) or through different channels (e.g. most tweeted and most viewed) were combined in a single observation. Overall, the reduced dataset contains 5504 \textit{unique} articles for subsequent analyses. Note that the number of articles is slightly lower than in the previous version (5592). I had to scrape the articles again in order to be able to calculate the readability indices (the previous scraping directly pre-processed the articles to omit punctuation etc.) and 88 articles could not be retrieved again in the second scraping. The missing articles were reuters/aponline press releases that were not available on the NYT website anymore.
-
-For each observation, I created a vector of dichotomous variables indicating whether the respective article was included in each of the categories (emailed, facebook, etc.) at least once. Here is a sample of observations from this reduced dataset (article body, keywords, etc. are omitted). These variables represent the matrix of covariates that will be used in order to model differences in topical prevalence in the collection of documents.
-
-
-
-\section{Initial Selection Model with 5 Topics}
-
-We decided to focus our analysis on a subset of articles that contain political content. In order to select these articles, I estimated a first structural topic model with 5 topics using the \texttt{stm} package in \texttt{R} \citep[using spectral initialization, see][]{roberts2014structural,roberts2014stm}. In order to make the estimation computationally more tractable, I removed terms from the dictionary that only appeared in 10 articles or less. The following output presents an overview of the extracted topics by displaying words that are highly associated with the respective topic (using highest probability, FREX, Lift, Score, c.f. \citealt{roberts2014stm} for more details).
-
-\begin{figure}
-\caption{Highest probability words for topics}\label{fig:words}
+\begin{figure}[ht]
+\caption{Highest probability words for each topic}\label{fig:words}
 \includegraphics[width=\textwidth]{../calc/fig/words}
 \end{figure}
 
+The high probability words provide a good intuition for the topics extracted from the corpus. For example, the first topic clearly covers the US Presidential race and national politics. Topic 3, on the other hand, is mostly focused on (international) conflicts. After closely investigating the high probability words and reviewing sample articles that were estimated to be most associated with each of the topics, we decided to give them the following descriptive labels:
 
-The first topic clearly covers political issues and the US Presidential race. Topic 3 is mostly focused on conflicts, and topic 5 covers a mixture of economic, technology, and sports. Topics 2 and 4, on the other hand, cover cultural themes (movies, museum, fashion, etc.). The heterogeneity in topic 5 indicates that a total number of five topics is to small to properly characterize the corpus. Nevertheless, this broad categorization is sufficient to select a subset of articles related to political issues for the subsequent analyses. I omitted all articles that had the highest probability to belong to topic 2 and 4. Topic 5 was not omitted since it contains articles related to economic issues, which may well be politically relevant. As such, the filtering of political articles can be seen as conservative in the sense that we are more likely to include articles that are not clearly political rather than omitting articles that are. The reduced dataset consists of 3401 articles that were estimated to be most likely to belong to topics 1, 3, or 5.\footnote{It would also be possible to estimate a larger topic model using the entire set of articles and then only focus on topics that are clearly political. The substantive conclusions should not differ with either approach.}
+\begin{enumerate}\singlespacing
+\begin{multicols}{2}
+\item Presidential Race \item Books \item Conflicts \item Cities  \item Health 
+\item Movies \item Education/Inequality \item Food \item Theater \item Legal/Court 
+\columnbreak
+\item Police \item Iran/Israel \item Baseball \item Religion \item Basketball 
+\item Fashion \item Natural Disaster \item International/Opinion \item Economy \item Family
+\end{multicols}
+\end{enumerate}
 
-
-\section{Results for Political/Economic Articles - 10 Topics}
-
-After selecting the subset of articles that focus on political or economic issues, I estimated a second model with 10 topics. The following output again displays the topics along with highly associated words.
-
-
-The following plot displays the proportions of each individual topic in the overall text body. I added descriptive labels for each topic.
+As a next step, we want to investigate the overall prevalence of each topic in the collection of \textit{New York Times} articles. Figure~\ref{fig:prop} displays the expected topic proportions in the corpus.
 
 \begin{figure}
 \caption{Example for Topic Perspectives}\label{fig:prop}
 \includegraphics[width=\textwidth]{../calc/fig/prop} 
 \end{figure}
 
-Interestingly, the prevalence of topics in the corpus is quite evenly distributed. However, it should be kept in mind, that each observation in the document matrix can represent multiple instances of an article in the raw collection. The proportions presented here only describe the proportions in unique articles but does not take into account how often each of the articles was included originally (e.g. as most tweeted, or most viewed multiple times). 
+Interestingly, the prevalence of topics is relatively evenly distributed. Most common topics among all articles include the economy, family, books, and reports about police behavior. Less common, on the other hand, are articles that cover food, basketball, baseball, or natural disasters. However, it should be kept in mind, that each observation in the document matrix can represent multiple instances of an article in the raw collection. The proportions presented here only describe the proportions in unique articles but does not take into account how often each of the articles was included originally (e.g. as most tweeted, or most viewed multiple over a longer period of time).
 
-We can also directly compare how certain words differentiate between topics. Consider for example topic 1 (presidential race) and topic 3 (international). The following plot displays how certain words are related to each of these topics. The size of the words is proportional to the frequency of occurence in the text, and the position on the x-axis describes whether the word is more related to either of the topics.
+Unsurprisingly, many of the topics extracted here clearly do not cover issues of political relevance. We will restrict our subsequent analyses to a subset of topics that are connected to political issues and/or actors. More specifically, we label the following topics as belonging to the broader category of Political/Economy:
+
+\begin{enumerate}[(a)]\singlespacing
+\begin{multicols}{2}
+\item Presidential Race \item Conflicts \item Education/Inequality \item Legal/Court 
+\columnbreak
+\item Police \item Iran/Israel \item International/Opinion \item Economy
+\end{multicols}
+\end{enumerate}
+
+We can also directly compare how certain words differentiate between topics in order to provide additional face validity of the topic model. Consider for example topic 1 (presidential race) and topic 3 (conflicts). Figure~\ref{fig:perspectives} displays how certain words are related to each of these topics. The size of the words is proportional to the frequency of occurence in the text, and the position on the x-axis describes whether the word is more related to either of the topics.
 
 \begin{figure}
 \caption{Example for Topic Perspectives}\label{fig:perspectives}
 \includegraphics[width=\textwidth]{../calc/fig/perspective} 
 \end{figure}
 
-In this example, we can see that ``Clinton'' is clearly associated with topic 1 (presidential race), rather than topic 3 (international). The term ``president'' on the other hand, is mentioned frequently in both topics, but cannot be uniquey ascribed to either of the topics. This plausible finding provides some additional face validity for the topic model.
+In this example, we can see that ``Clinton'' and ``Republican'' is clearly associated with topic 1 (presidential race), rather than topic 3 (conflicts). The term ``president'' on the other hand, is mentioned frequently in both topics, but cannot be uniquely ascribed to either of the topics, which seems plausible.
 
 
 \section{Differences in Topic Proportions between Categories}
 
-As described in \citet{roberts2014structural}, the structural topic model not only extracts topics from a collection of documents but also allows us to directly model the prevalence of topics in specific documents based on a matrix of meta-covariates. While it is also possible to use covariates in order to model differences in words used to describe certain topics, we only focus on differences with regard to \textit{how much} a topic is discussed in specific articles. The following figures display the change in the expected proportion to discuss individual topics for articles that were included in each of the categories or not.
+As described in \citet{roberts2014structural}, the structural topic model not only extracts topics from a collection of documents but also allows us to directly model the prevalence of topics in specific documents based on a matrix of meta-covariates. While it is also possible to use covariates in order to model differences in words used to describe certain topics, we only focus on differences with regard to \textit{how much} a topic is discussed in specific articles. The following figures display the change in the expected proportion to discuss individual topics for articles that were included in each of the categories or not. Note that we restrict our analyses on topics belonging to the category of Political/Economy. However, results for the complete set of topics are displayed in Appendix~\ref{app:res}.
 
-As a first step, we examine topic distributions for content offered by the New York Times through different channels (printed front page vs. digital sections). Looking at the articles that appeared on the printed front page, we can see that the topics ``Technology'' and ``Health/Care'' are less likely to appear. The proportion of articles focusing on both topics is about 5 percentage points lower than in articles that do not appear on the printed front page. Other topics such as ``International'' or ``Police'' are sligthly more likely to be discussed in front page articles. This pattern is amplified when looking at the top news section of the digital edition. Again, ``Technology'' and ``Health/Care'' are less likely to appear (along with ``Sport''). On the other hand, articles in this category were more likely to discuss the presidential race, international affairs, police, as well as relations with Iran and Israel. The bottom section of the digital edition basically reverses the topic distribution in the top news section. Here, the proportion of articles related to technology, health, and sport is higher. Lastly, articles in the opinion section were more likely to discuss the Supreme Court and Iran/Israel.
+As a first step, we examine the change in topic distributions for content offered by the New York Times through different channels (printed front page vs. digital sections). The results are displayed in Figure~\ref{fig:res_nyt_polecon}.
 
 \begin{figure}
-\caption{Differences between categories}\label{fig:res_nyt_polecon}
+\caption{Changes in Topic Distributions (Newspaper Section)}\label{fig:res_nyt_polecon}
 \includegraphics[width=\textwidth]{../calc/fig/res_nyt_polecon}
 \end{figure}
 
-Next, we compare topic distributions among articles that were most shared on different platforms. The figures reveal several interesting patterns. For example, we can see that articles that were most emailed were more likely to belong to the ``Health/Care'' topic but less likely to belong to political topics such as ``Presidential Race'', ``International'', or ``Supreme Court/Legal''. On the other hand, articles that were top shared on Facebook were more likely to belong to the topic ``Supreme Court/Legal''. Many articles in this topic discussed same-sex marriage and related Supreme Court decisions. As such, individuals who shared news content on Facebook were more likely to share articles related to marriage equality. Articles shared most on twitter, on the other hand, were more likely to discuss topics of ``Technology''. Overall, the results regarding shared content seem plausible in the context of underlying demographics of the population using each medium.
+Looking at the articles that appeared on the printed front page, we can see that the topics ``Conflicts'' and ``Legal/Court'', and ``Police'' are more likely to appear. The proportion of articles focusing on both topics is almost 5 percentage points lower than in articles that do not appear on the printed front page. Furthermore, none of the topics included here are substantially less likely to appear on the printed front page, which implies that the covers mostly topics that belong in the Political/Economy category rather than the remaining topics. Again, this result seems very plausible given our priors about the printed edition of the \textit{New York Times}. 
+
+We recover essentially the same pattern when looking at the top news section of the digital edition. The only subtle difference is that articles about the Presidential race are slightly more likely to appear on the digital front page, while articles belonging to the topic of Legal/Court are slightly less likely. The bottom section of the digital edition almost reverses the topic distribution in the top news section. Here, the proportion of articles related to the Presidential race, conflicts, and Iran/Israel are less likely to appear. Overall, instead of focusing on topics related to politics and the economy, articles on the bottom part of the digital edition cover the remaining non-political issues.
+
+Lastly, there is a remarkable finding regarding the topic distribution in the digital opinion section. Here, we find much higher proportions for the topic labelled ``International/Opinion''. While most of the articles related to this topic cover international issues, it should be noted that many of them are opinion pieces focusing on various issues. As such, it appears that the structural topic model extracted op-eds as a unique topic category due to systematic differences in word usage. We do not view this finding to be problematic but rather as an additional validation of the structural topic model approach, since opinion pieces clearly differ in writing style and specific word choice.
 
 \begin{figure}
-\caption{Differences between categories}\label{fig:res_share_polecon}
+\caption{Changes in Topic Distributions (Shared/Viewed)}\label{fig:res_share_polecon}
 \includegraphics[width=\textwidth]{../calc/fig/res_share_polecon} 
 \end{figure}
 
-How do these patterns translate into views? The last plot (bottom right) of the previous figure displays change in topic proportions for articles that were most viewed. Articles in this category were more likely to discuss the presidential race, even though articles in this topic were not more likely to be shared on any platform. Other topics that were more likely in the most-viewed category are ``Police'' and ``Iran/Israel''. Interestingly, while articles about health were more likely to be emailed, they were less likely to be most viewed articles.
+Next, we compare changes in topic distributions among articles that were most shared on different platforms. Figure~\ref{fig:res_share_polecon} reveals several interesting patterns. For example, we can see that articles that were most emailed were more likely to belong to the ``Education/Inequality'' topic but less likely to belong to many of the remaining political topics such as ``Presidential Race'', ``Conflicts'', or ``Legal/Court''. On the other hand, articles that were top shared on Facebook were more likely to belong to the topic ``Supreme Court/Legal'', and ``International/Opinion''. Many articles in this topic discussed same-sex marriage and related Supreme Court decisions. As such, individuals who shared news content on Facebook were more likely to share articles related to marriage equality. Articles shared most on Twitter, on the other hand, were more likely to discuss topics of ``Economy'', ``Education/Inequality'', and ``Conflicts''.
+
+As such, there appear to be systematic differences between users who share content through different channels. This result is plausible if we consider the underlying demographics of the average individuals using each medium. For example, people who share articles via email might be older than individuals who use social media platforms to share content. If we additionally take into account non-political issues, we see that most emailed articles have the biggest increase in the probability to belong to the topics of ``Health'' and ``Food''. On Facebook, on the other hand, users who share content are likely to be younger and therefore more interested in topics like same-sex marriage. Furthermore, sharing content rather than emailing an article to an acquaintance has the additional function of signalling political preferences to a broader audience. Articles shared on Twitter are more likely to belong to the topic ``Economy'', which could be explained by the fact that many articles in this topic address new technologies.
+
+However, one of the most important questions is how these patterns actually translate into views? The top left part of the Figure~\ref{fig:res_share_polecon} displays change in topic proportions for articles that were most viewed. Interestingly, we observe substantial differences between the topic proportions in most viewed articles as compared to content that was shared. Articles in this category were more likely to discuss the presidential race, even though articles in this topic were not more likely to be shared on any platform. Other topics that were more likely in the most-viewed category are ``Police'' and ``Iran/Israel''. Interestingly, multiple topics that were more likely to appear in shared articles were, in fact, less likely to be most viewed (e.g. Economy on Twitter, International/Opinion on Facebook, and Education/Inequality via email). While it would be interesting to directly examine how shared articles affect traffic to the contents hosted by the \textit{New York Times}, this indirect finding is at least suggestive of the fact that attention on social media is not the most decisive factor that influences article views.
 
 
 \section{Topic Proportions over Time}
 
-We can also examine how the proportion of topics in each of the categories changes over time. Based on the topic model, I matched the estimated topic proportions for each article with the articles' dates of appearance. The following figure displays the aggregate topic proportions for a selection of political topics in each of the article categories from mid February till end of April. Especially the peaks in topic proportions are interesting here. For example, we see that the proportion of articles related to the topic ``Supreme Court/Legal'' in the top news category has a marked increase towards the end of the covered time period. Looking at the articles that were most viewed, we can identify several time points were the presidential race as well as the topic ``Police'' was more salient than other topics.
-
+As a next step, we want to examine how the proportion of topics in each of the categories changes over time. Based on the topic model discussed above, we matched the estimated topic proportions for each article with the articles' dates of appearance. For these simplicity, we decided to focus on three main topics related to domestic politics: Presidential Race, Legal/Court, Police. However, results for the full set of political issues are displayed in Appendix~\ref{app:series}.
 
 \begin{figure}
-\caption{Topic proportions over time}\label{fig:series_nyt_main}
+\caption{Topic Proportions over Time (Newspaper Section)}\label{fig:series_nyt_main}
 \includegraphics[width=\textwidth]{../calc/fig/series_nyt_main} 
 \end{figure}
 
+Figure~\ref{fig:series_nyt_main} displays the aggregate topic proportions for in each of the \textit{New York Times} sections from mid February until end of April. Overall there is a substantial amount of variability in the relative prevalence of the three topics under consideration here. Especially the peaks in topic proportions are interesting. For example, we see that the proportion of articles related to the topic ``Legal/Court'' in the top news category spike in the beginning of March, which coincides with the overturning of Nebraska's ban on same-sex marriage by District Judge Joseph F. Batallion, as well as the Alabama Supreme Court's decision to disallow marriage licenses for same sex couples. On the printed front page, we observe a spike in the prevalence of articles related to the presidential race around April 12, which coincides with Hillary Clinton's formal announcement of her candidacy for the presidential nomination of the Democratic party. Spikes in prevalence of articles related to the police are less pronounced. However, they also appear to co-occur with events such as the shooting of Walter Scott in North Charleston, South Carolina on April 4. Overall, the results therefore show that we can recover interesting shifts in news attention based on changes in the prevalence of the recovered from the articles.
+
 \begin{figure}
-\caption{Topic proportions over time}\label{fig:series_share_main}
+\caption{Topic Proportions over Time (Shared/Viewed)}\label{fig:series_share_main}
 \includegraphics[width=\textwidth]{../calc/fig/series_share_main} 
 \end{figure}
 
+Turning now to the articles that were most viewed and shared in Figure~\ref{fig:series_share_main}, we can identify several time points were the presidential race, court decisions, as well as the police behavior was more salient than other topics. Again, we observe heightened attention for the presidential race when Hillary Clinton anounced here candidacy, and for police behavior around the time of Walter Scott's death. Interestingly, regarding same sex marriage, there is a pronounced spike in attention around April 1, which was less strong when looking at the prevalence in each section of the newspaper. Furthermore, there is a lot more attention to the presidential race in the most viewed category than in the remaining categories, which is consistent with the previous results regarding different topic proportions.
+
+
 \section{Article Readability}
 
-Another interesting question is whether there are structural differences between articles that determine whether they are more likely to be shared/most viewed etc. In order to examine whether the article complexity has any effect, I calculated the Automated Readability Index (ARI) for all articles (there are other readbility indices available, as well). The following figure displays the mean ARI scores for each article category. The ARI is supposed to map onto US grade years, so higher numbers indicate higher levels of difficulty. We can observe that articles that were most emailed are on average less complex/difficult to read than articles in any of the remaining categories.
+Another interesting question is whether there are structural differences between articles that determine the likelihood to be shared or most viewed etc. In order to examine whether the article complexity has any effect, I calculated the Flesch-Kincaid Readability score for all articles belonging to the broader topic of Political/Economy (alternative readbility indices, like the ARI produce equivalent results). The following figure displays the mean Flesch-Kincaid scores for each article category. The score is supposed to map onto US grade years, so higher numbers indicate higher levels of difficulty.
 
 \begin{figure}
 \caption{Article Readability by Category}\label{fig:readability}
 \includegraphics[width=\textwidth]{../calc/fig/readability} 
 \end{figure}
 
-
+We find that articles on the front page as well as the digital top news section appear to be slightly more complex or harder to read than articles in the remaining categories. Furthermore, articles that were most emailed are on average less complex than articles in any of the remaining categories.
 
 
 \section{What stays in the loop}
 
-As a last step, I started examining the order in which articles appear in each of the categories discussed so far. For example, it could be interesting to see whether articles are first shared and then become most viewed (or vice versa), or whether articles are potentially moved to the top news section after being shared a lot etc. I am not sure yet about the best way to model such patterns since the underlying data structure is relatively complex. To get a first impression, I selected all articles that were included in the dataset for mutiple days and calculated the proportion of article categories for each day since the first publication (most shared, top news etc.). The following figure displays the results.
+As a last step, we started examining the order in which articles appear in each of the categories discussed so far. For example, it could be interesting to see whether articles are first shared and then become most viewed (or vice versa), or whether articles are potentially moved to the top news section after being shared a lot etc. In order to get a first impression of these possible patterns, we selected all articles that were included in the dataset for mutiple days and calculated the proportion of article categories for each day since the first publication (most shared, top news etc.). Figure~\ref{fig:switch} displays the results.
 
 \begin{figure}
 \caption{What stays in the loop}\label{fig:switch}
 \includegraphics[width=\textwidth]{../calc/fig/switch} 
 \end{figure}
 
-On the first day of publication, most articles only appeared in the bottom section of the digital edition (about 40\%), or the top news section (about 25\%). Almost none of the articles that appear in the dataset for multiple times have been published on the printed front page first. Rather, they appear in print the day after being available online, as can be seen by the increase in the proportion of front page articles at day 1 (and the respective decrease in digital articles). The proportion of articles belonging to the most shared or most viewed categories increase throughout the first three days. While the differences are not very large, it appears that articles fall into the categories most tweeted and most viewed earlier than in the categories most emailed or most shared on facebook. Sharing on twitter and views might therefore preceed subsequent sharing on facebook and via email. However, it is worth noting again that these differences are relatively small and are so far only examined on an aggregate level. Nevertheless, these are interesting patterns that could be investigated further.
+On the first day of publication, most articles only appeared in the bottom section of the digital edition (about 40\%), or the top news section (about 25\%). Almost none of the articles that appear in the dataset for multiple times have been published on the printed front page first. Rather, they appear in print the day after being available online, as can be seen by the increase in the proportion of front page articles at day 1 (and the respective decrease in digital articles). The proportion of articles belonging to the most shared or most viewed categories increase throughout the first three days. While the differences are not very large, it appears that articles fall into the categories most tweeted and most viewed earlier than in the categories most emailed or most shared on Facebook. Sharing on Twitter and views might therefore precede subsequent sharing on Facebook and via email. However, it is worth noting that these differences are relatively small and are so far only examined on an aggregate level. Nevertheless, these are interesting patterns that could be investigated further.
 
 
-\clearpage
 \section{Conclusion}
-
 
 \vspace{1em}\noindent Possible subsequent steps:
 \begin{itemize}\singlespacing
@@ -207,7 +226,11 @@ On the first day of publication, most articles only appeared in the bottom secti
 \footnotesize\singlespacing
 \appendices
 
-\section{Topic Proportions between categories (all topics)}
+\section{Topic Proportions between categories (all topics)}\label{app:res}
+\renewcommand\thefigure{\thesection.\arabic{figure}}
+\renewcommand\thetable{\thesection.\arabic{table}}
+\setcounter{figure}{0}
+\setcounter{table}{0}
 
 \begin{figure}[h]
 \caption{Differences between categories}\label{fig:res_nyt}
@@ -221,7 +244,11 @@ On the first day of publication, most articles only appeared in the bottom secti
 
 
 \clearpage
-\section{Topic proportions over time (all topics)}
+\section{Topic proportions over time (all topics)}\label{app:series}
+\renewcommand\thefigure{\thesection.\arabic{figure}}
+\renewcommand\thetable{\thesection.\arabic{table}}
+\setcounter{figure}{0}
+\setcounter{table}{0}
 
 \begin{figure}[h]
 \caption{Topic proportions over time}\label{fig:series_nyt}

@@ -2038,17 +2038,6 @@ title="Sample Matching: Representative Sampling from Internet Panels",
 note="from \url{www.polimetrix.com/documents/Polimetrix_Whitepaper_Sample_Matching.pdf}"
 }
 
-@Article{roberts2014stm,
-  author =    {Roberts, Margaret E and Stewart, Brandon M and Tingley, Dustin},
-  title =     {stm: R package for structural topic models},
-  journal =   {Journal of Statistical Software},
-  year =      {2014},
-  volume =    {1},
-  pages =     {1--49},
-  owner =     {patrick},
-  timestamp = {2016.03.28}
-}
-
 @Article{roberts2014structural,
   author =    {Roberts, Margaret E. and Stewart, Brandon M. and Tingley, Dustin and Lucas, Christopher and Leder-Luis, Jetson and Gadarian, Shana Kushner and Albertson, Bethany and Rand, David G.},
   title =     {Structural Topic Models for Open-Ended Survey Responses},
