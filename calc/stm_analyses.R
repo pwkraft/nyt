@@ -39,6 +39,18 @@ plot.STM(stm_res, type = "labels", topics = 16:20)
 dev.off()
 par(mfcol = c(1,1), cex = 1, mar = c(5, 4, 4, 2) + 0.1, mgp = c(3,1,0))
 
+pdf("fig/words_top.pdf")
+par(mfrow = c(2,2), cex = .5, mar=c(2,0,2,0))
+plot.STM(stm_res, type = "labels", topics = 1:5)
+plot.STM(stm_res, type = "labels", topics = 6:10)
+dev.off()
+
+pdf("fig/words_bottom.pdf")
+par(mfrow = c(2,2), cex = .5, mar=c(2,0,2,0))
+plot.STM(stm_res, type = "labels", topics = 11:15)
+plot.STM(stm_res, type = "labels", topics = 16:20)
+dev.off()
+
 ## proportions of topics (all)
 pdf("fig/prop.pdf", height = 4)
 par(mar = c(5, 2, 2, 2) + 0.1)
@@ -116,6 +128,15 @@ prep <- estimateEffect(topics_polecon ~ emailed + facebook + front + tweeted + v
                        , stm_res, meta = out$meta, uncertainty = "Global")
 
 ## plot results
+pdf("fig/res_nyt_polecon_empty.pdf", height = 4)
+par(mfrow = c(2,2), mar = c(0, 3, 3, 1), mgp = c(1,1,0), cex=.6)
+plot(0,0,type = "n", xlim = c(-.25,.25), ylab = "Front Page", xlab = NA, yaxt="n",xaxt="n")
+plot(0,0,type = "n", xlim = c(-.25,.25), ylab = "Opinion (Digital Edition)", xlab = NA, yaxt="n",xaxt="n")
+par(mar = c(3, 3, 0, 1), mgp = c(1,1,0))
+plot(0,0,type = "n", xlim = c(-.25,.25), ylab = "Top News (Digital Edition)", xlab = NA, yaxt="n")
+plot(0,0,type = "n", xlim = c(-.25,.25), ylab = "Bottom Part (Digital Edition)", xlab = NA, yaxt="n")
+dev.off()
+
 pdf("fig/res_nyt_polecon.pdf", height = 4)
 par(mfrow = c(2,2), mar = c(0, 3, 3, 1), mgp = c(1,1,0), cex=.6)
 plot.estimateEffect(prep, covariate = "front", model = stm_res, xlim = c(-.25,.25)
@@ -134,6 +155,15 @@ plot.estimateEffect(prep, covariate = "digital_bottom", model = stm_res
                     , xlim = c(-.25,.25), method = "difference", cov.value1 = 1, cov.value2 = 0
                     , ylab = "Bottom Part (Digital Edition)", labeltype = "custom"
                     , custom.labels = topics[topics_polecon])
+dev.off()
+
+pdf("fig/res_share_polecon_empty.pdf", height = 4)
+par(mfrow = c(2,2), mar = c(0, 3, 3, 1), mgp = c(1,1,0), cex=.6)
+plot(0,0,type = "n", xlim = c(-.25,.25), ylab = "Most Viewed", xlab = NA, yaxt="n",xaxt="n")
+plot(0,0,type = "n", xlim = c(-.25,.25), ylab = "Shared on Facebook", xlab = NA, yaxt="n",xaxt="n")
+par(mar = c(3, 3, 0, 1), mgp = c(1,1,0))
+plot(0,0,type = "n", xlim = c(-.25,.25), ylab = "Emailed", xlab = NA, yaxt="n")
+plot(0,0,type = "n", xlim = c(-.25,.25), ylab = "Tweeted", xlab = NA, yaxt="n")
 dev.off()
 
 pdf("fig/res_share_polecon.pdf", height = 4)
@@ -185,21 +215,25 @@ ggplot(filter(nyt_series, topic %in% topics[topics_polecon] & type %in% nyt_shar
 ggsave("fig/series_share.pdf", height = 5)
 
 ## 3 main topics
-ggplot(filter(nyt_series, topic %in% c("Presidential Race", "Legal/Court", "Police") & 
+p <- ggplot(filter(nyt_series, topic %in% c("Presidential Race", "Legal/Court", "Police") & 
                 type %in% nyt_part), aes(x = date, y = proportion, col = topic, lty = topic)) + 
-  geom_line() + facet_wrap(~type) + theme_classic() + theme(panel.border = element_rect(fill=NA)) + 
-  theme(legend.position = "bottom") + ylab("Proportion") + xlab("Date") + 
-  theme(axis.text.x = element_text(angle = 50, hjust = 1)) + 
+  geom_line() + facet_wrap(~type) + theme_classic() + theme(legend.position = "bottom") + 
+  ylab("Proportion") + xlab("Date") + theme(axis.text.x = element_text(angle = 50, hjust = 1)) + 
   scale_color_discrete(name = "Topic") +  scale_linetype_discrete(name = "Topic")
+p + theme(panel.border = element_rect(fill=NA))
 ggsave("fig/series_nyt_main.pdf", height = 5)
+p + theme(panel.border = element_rect())
+ggsave("fig/series_nyt_main_empty.pdf", height = 5)
 
-ggplot(filter(nyt_series, topic %in% c("Presidential Race", "Legal/Court", "Police") & 
+p <- ggplot(filter(nyt_series, topic %in% c("Presidential Race", "Legal/Court", "Police") & 
                 type %in% nyt_share), aes(x = date, y = proportion, col = topic, lty = topic)) + 
-  geom_line() + facet_wrap(~type) + theme_classic() + theme(panel.border = element_rect(fill=NA)) + 
-  theme(legend.position = "bottom") + ylab("Proportion") + xlab("Date") + 
-  theme(axis.text.x = element_text(angle = 50, hjust = 1)) + 
+  geom_line() + facet_wrap(~type) + theme_classic() + theme(legend.position = "bottom") + 
+  ylab("Proportion") + xlab("Date") + theme(axis.text.x = element_text(angle = 50, hjust = 1)) + 
   scale_color_discrete(name = "Topic") +  scale_linetype_discrete(name = "Topic")
+p + theme(panel.border = element_rect(fill=NA))
 ggsave("fig/series_share_main.pdf", height = 5)
+p + theme(panel.border = element_rect())
+ggsave("fig/series_share_main_empty.pdf", height = 5)
 
 
 ### complexity by category
@@ -226,12 +260,14 @@ readab_summary$variable <- factor(readab_summary$variable
                                   , labels = c(nyt_share[c(1,3,2,4)],nyt_part[c(1,3,2,4)]))
 readab_summary$group <- rep(c("Newspaper section","Shared/Viewed"),each=4)
 
-ggplot(readab_summary, aes(y = mean, ymin = cilo, ymax = cihi, x = variable)) + 
-  theme_classic() + theme(panel.border = element_rect(fill=NA)) +
-  geom_pointrange() + facet_wrap(~group, scales="free_x") + 
+p <- ggplot(readab_summary, aes(y = mean, ymin = cilo, ymax = cihi, x = variable)) + 
+  theme_classic() + geom_pointrange() + facet_wrap(~group, scales="free_x") + 
   ylab("Flesch-Kincaid Grade Level") + xlab(NULL) + 
   theme(axis.text.x = element_text(angle = 40, hjust = 1))
+p + theme(panel.border = element_rect(fill=NA))
 ggsave("fig/readability.pdf",height=5)
+p + theme(panel.border = element_rect())
+ggsave("fig/readability_empty.pdf",height=5)
 
 
 ### switches between categories (polecon)
@@ -250,11 +286,12 @@ nyt_switch$group <- factor(nyt_switch$type %in% nyt_share
                            , labels = c("Newspaper section","Shared/Viewed"))
   
 ## create plot
-ggplot(nyt_switch, aes(x = day, y = prop, col = type, lty=type)) + geom_line() + theme_classic() + 
-  theme(panel.border = element_rect(fill=NA)) + theme(legend.position = "bottom") + 
-  scale_color_discrete(name = NULL) +  scale_linetype_discrete(name = NULL) + 
-  ylab("Proportion") + xlab("Day") + facet_wrap(~group)
+p <- ggplot(nyt_switch, aes(x = day, y = prop, col = type, lty=type)) + geom_line() + theme_classic() + 
+  theme(legend.position = "bottom") + scale_color_discrete(name = NULL) + 
+  scale_linetype_discrete(name = NULL) + ylab("Proportion") + xlab("Day") + facet_wrap(~group)
+p + theme(panel.border = element_rect(fill=NA))
 ggsave("fig/switch.pdf")
-  
+p + theme(panel.border = element_rect())
+ggsave("fig/switch_empty.pdf")  
 
 
