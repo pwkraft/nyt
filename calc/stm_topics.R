@@ -4,7 +4,7 @@
 ## Part I: Topic models, selection of articles, measure complexity
 
 rm(list=ls())
-setwd("/data/Uni/projects/2015/nyt/calc")
+setwd("/data/Dropbox/Uni/Projects/2015/nyt/calc")
 load("in/nyt_articles.Rdata")
 load("in/nyt_src.Rdata")
 library(stm)
@@ -117,7 +117,7 @@ processed <- textProcessor(nyt_reduced$text
 out <- prepDocuments(processed$documents, processed$vocab
                           , processed$meta, lower.thresh = 10)
 length(out$vocab)
-stm_res <- stm(out$documents, out$vocab, K = 20
+stm_res <- stm(out$documents, out$vocab, K = 0
                   , prevalence =~ emailed + facebook + front + tweeted + viewed +
                         digital_opinion + digital_topnews + digital_bottom
                   , max.em.its = 75, data = out$meta, init.type = "Spectral")
