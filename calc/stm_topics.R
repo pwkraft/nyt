@@ -70,8 +70,18 @@ nyt_digital <- data.frame(link = src_digital$url, date = src_digital$Date
                         , srctitle = src_digital$Title, section = src_digital$Section
                         , subsection = src_digital$Subsection) %>% left_join(nyt_articles) %>%
     mutate(uniqueid = 700001:(700000 + nrow(src_digital)))
-nyt_digital$type <- recode(as.numeric(nyt_digital$section)
+nyt_digital$type <- Recode(as.numeric(nyt_digital$section)
                          , "1 = 'digital_opinion'; 2 = 'digital_bottom'; 3:5 = 'digital_topnews'")
+
+
+### save location information
+
+nyt_location1 <- nyt_digital %>% 
+  filter(!duplicated(nyt_digital$link)) %>%
+  select(link, author, srctitle, section, subsection
+         , title, keywords, news_keywords, articleid, text)
+
+save(nyt_digital, nyt_location1, file = "in/nyt_location.Rdata")
 
 
 ### combine merged articles in single dataframe
@@ -80,7 +90,7 @@ nyt_combined <- bind_rows(nyt_viewed, nyt_facebook, nyt_emailed
                         , nyt_tweeted, nyt_front, nyt_digital)
 save(nyt_combined, file = "in/nyt_combined.Rdata")
 rm(nyt_viewed, nyt_facebook, nyt_emailed, nyt_tweeted, nyt_front, nyt_digital, nyt_articles
- , src_shared, src_front, src_digital)
+ , src_shared, src_front, src_digital, nyt_location1)
 gc()
 
 
