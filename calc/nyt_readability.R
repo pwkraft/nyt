@@ -47,5 +47,5 @@ p <- ggplot(readab_summary, aes(y = mean, ymin = cilo, ymax = cihi, x = variable
   ylab("Flesch-Kincaid Grade Level") + xlab(NULL) + 
   theme(axis.text.x = element_text(angle = 40, hjust = 1))
 p + theme(panel.border = element_rect(fill=NA))
-ggsave("fig/readability.pdf",height=5)
+ggsave("fig/readability.png",height=5,width=9)
 
